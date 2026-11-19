@@ -4,7 +4,16 @@ import Button from './Button';
 import { colors, radius, space, type } from '../theme';
 
 // Dialog pengesahan padam (Delete) — ikut komponen Dialog di Figma
-export default function ConfirmDialog({ visible, title, message, onCancel, onConfirm }) {
+export default function ConfirmDialog({
+  visible,
+  title,
+  message,
+  onCancel,
+  onConfirm,
+  confirming = false,
+  confirmLabel = 'Padam',
+  confirmingLabel = 'Memadam...',
+}) {
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onCancel}>
       <View style={styles.overlay}>
@@ -12,8 +21,15 @@ export default function ConfirmDialog({ visible, title, message, onCancel, onCon
           <Text style={type.h3}>{title}</Text>
           <Text style={type.body}>{message}</Text>
           <View style={styles.actions}>
-            <Button label="Batal" variant="secondary" onPress={onCancel} style={{ flex: 1 }} />
-            <Button label="Padam" variant="danger" onPress={onConfirm} style={{ flex: 1 }} testID="confirm-delete" />
+            <Button label="Batal" variant="secondary" onPress={onCancel} disabled={confirming} style={{ flex: 1 }} />
+            <Button
+              label={confirming ? confirmingLabel : confirmLabel}
+              variant="danger"
+              onPress={onConfirm}
+              loading={confirming}
+              style={{ flex: 1 }}
+              testID="confirm-delete"
+            />
           </View>
         </View>
       </View>

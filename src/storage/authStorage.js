@@ -11,7 +11,7 @@ export async function loadAccounts() {
     return Array.isArray(accounts) ? accounts : [];
   } catch (error) {
     log('loadAccounts GAGAL', error);
-    return [];
+    throw error;
   }
 }
 
@@ -65,5 +65,15 @@ export async function loadSession() {
   } catch (error) {
     log('loadSession GAGAL', error);
     return null;
+  }
+}
+
+export async function logoutAccount() {
+  try {
+    await AsyncStorage.removeItem(SESSION_KEY);
+    log('logoutAccount <-');
+  } catch (error) {
+    log('logoutAccount GAGAL', error);
+    throw error;
   }
 }

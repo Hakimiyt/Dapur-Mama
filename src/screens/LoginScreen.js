@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import BrandMark from '../components/BrandMark';
@@ -21,28 +20,45 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   const setField = (key, value) => {
     if (key === 'email') setEmail(value);
     if (key === 'password') setPassword(value);
     setErrors((current) => ({ ...current, [key]: undefined }));
+    setFeedback(null);
   };
 
   const login = async () => {
+    if (submitting) return;
     const validation = validateLogin({ email, password });
     setErrors(validation.errors);
-    if (!validation.isValid) return;
-
-    const result = await loginAccount({ email, password });
-    if (!result.ok) {
-      Alert.alert('Log masuk gagal', result.message);
+    if (!validation.isValid) {
+      setFeedback({ type: 'error', text: 'Semak ruangan yang ditandakan dan cuba lagi.' });
       return;
     }
+
+    setSubmitting(true);
+    try {
+      const result = await loginAccount({ email, password });
+      if (!result.ok) {
+        setFeedback({ type: 'error', text: result.message });
+        return;
+      }
+      goToRecipes();
+    } catch {
+      setFeedback({ type: 'error', text: 'Tidak dapat log masuk sekarang. Cuba lagi.' });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const goToRecipes = () =>
     navigation.reset({
       index: 0,
       routes: [{ name: 'RecipeList' }],
     });
-  };
 
   return (
     <SafeAreaView style={styles.root} edges={['top', 'bottom']}>
@@ -65,6 +81,15 @@ export default function LoginScreen({ navigation }) {
             <Text style={[type.body, styles.description]}>
               Log masuk untuk menyimpan resepi dan kenangan dari dapur anda
             </Text>
+
+            {feedback ? (
+              <Text
+                accessibilityRole="alert"
+                style={[styles.feedback, styles.errorFeedback]}
+              >
+                {feedback.text}
+              </Text>
+            ) : null}
 
             <View style={styles.fieldGroup}>
               <Text style={type.label}>E-mel</Text>
@@ -100,7 +125,12 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.forgotText}>Lupa kata laluan?</Text>
             </Pressable>
 
-            <Button label="Log masuk" onPress={login} testID="btn-login" />
+            <Button
+              label={submitting ? 'Sedang log masuk...' : 'Log masuk'}
+              onPress={login}
+              loading={submitting}
+              testID="btn-login"
+            />
 
             <Pressable
               style={styles.register}
@@ -111,8 +141,7 @@ export default function LoginScreen({ navigation }) {
               </Text>
             </Pressable>
           </View>
-
-          <Text style={styles.footer}>Resepi keluarga, terpahami untuk generasi seterusnya.</Text>
+          
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -188,6 +217,8 @@ const styles = StyleSheet.create({
   error: {
     color: colors.danger,
   },
+  feedback: { ...type.caption, padding: space.md, borderRadius: radius.md, borderWidth: 1 },
+  errorFeedback: { color: colors.danger, backgroundColor: '#fef2f2', borderColor: '#fecaca' },
   footer: {
     ...type.caption,
     marginTop: 'auto',

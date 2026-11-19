@@ -1,17 +1,32 @@
 import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, Text, StyleSheet, View } from 'react-native';
 import { colors, radius, space, type } from '../theme';
 
 // variant: primary | secondary | danger  (ikut komponen Button di Figma)
-export default function Button({ label, onPress, variant = 'primary', style, testID }) {
+export default function Button({ label, onPress, variant = 'primary', style, testID, loading = false, disabled = false }) {
   return (
     <Pressable
       testID={testID}
       onPress={onPress}
+      disabled={disabled || loading}
       accessibilityRole="button"
-      style={({ pressed }) => [styles.base, boxStyles[variant], pressed && { opacity: 0.85 }, style]}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
+      style={({ pressed }) => [
+        styles.base,
+        boxStyles[variant],
+        (disabled || loading) && styles.disabled,
+        pressed && { opacity: 0.85 },
+        style,
+      ]}
     >
-      <Text style={[type.button, textStyles[variant]]}>{label}</Text>
+      {loading ? (
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="small" color={textStyles[variant].color} />
+          <Text style={[type.button, textStyles[variant]]}>{label}</Text>
+        </View>
+      ) : (
+        <Text style={[type.button, textStyles[variant]]}>{label}</Text>
+      )}
     </Pressable>
   );
 }
@@ -24,6 +39,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  loadingContent: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  disabled: { opacity: 0.7 },
 });
 
 const boxStyles = StyleSheet.create({

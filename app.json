@@ -3,6 +3,7 @@
     "name": "DapurMama",
     "slug": "DapurMama",
     "version": "1.0.0",
+    "icon": "./assets/brand/dapur-mama-logo.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {

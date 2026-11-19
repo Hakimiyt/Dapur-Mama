@@ -7,7 +7,7 @@ import { colors, radius, space, type, shadowCard } from '../theme';
 export default function RecipeCard({ recipe, onPress, onToggleFavorite }) {
   return (
     <Pressable onPress={onPress} style={styles.card} accessibilityRole="button">
-      <Thumbnail uri={recipe.photoUri} style={styles.thumb} />
+      <Thumbnail uri={recipe.photoUri} recipeId={recipe.id} style={styles.thumb} />
       <View style={styles.info}>
         <Text style={type.h3} numberOfLines={1}>{recipe.name}</Text>
         <View style={styles.pill}>

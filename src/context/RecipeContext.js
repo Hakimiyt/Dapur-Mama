@@ -8,18 +8,36 @@ export const useRecipes = () => useContext(RecipeContext);
 export function RecipeProvider({ children }) {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  // READ: dapatkan semula data setempat semasa app dibuka
+  const fetchRecipes = useCallback(
+    () =>
+      loadRecipes()
+        .then((data) => {
+          setRecipes(data);
+          setLoadError(false);
+        })
+        .catch((error) => {
+          log('Muat resepi GAGAL', error);
+          setLoadError(true);
+        })
+        .finally(() => setLoading(false)),
+    []
+  );
+
+  const reloadRecipes = useCallback(() => {
+    setLoading(true);
+    setLoadError(false);
+    fetchRecipes();
+  }, [fetchRecipes]);
+
   useEffect(() => {
-    loadRecipes().then((data) => {
-      setRecipes(data);
-      setLoading(false);
-    });
-  }, []);
+    fetchRecipes();
+  }, [fetchRecipes]);
 
   const commit = useCallback(async (next) => {
-    setRecipes(next);
     await saveRecipes(next);
+    setRecipes(next);
   }, []);
 
   // CREATE
@@ -60,7 +78,7 @@ export function RecipeProvider({ children }) {
 
   return (
     <RecipeContext.Provider
-      value={{ recipes, loading, addRecipe, updateRecipe, deleteRecipe, toggleFavorite, getRecipe }}
+      value={{ recipes, loading, loadError, reloadRecipes, addRecipe, updateRecipe, deleteRecipe, toggleFavorite, getRecipe }}
     >
       {children}
     </RecipeContext.Provider>

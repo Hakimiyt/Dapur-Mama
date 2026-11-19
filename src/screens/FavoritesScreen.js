@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
 import BottomNav from '../components/BottomNav';
@@ -10,17 +10,28 @@ import { colors, space, type } from '../theme';
 export default function FavoritesScreen({ navigation }) {
   const { recipes, toggleFavorite } = useRecipes();
   const favorites = recipes.filter((recipe) => recipe.favorite);
+  const onToggleFavorite = async (id) => {
+    try {
+      await toggleFavorite(id);
+    } catch {
+      Alert.alert('Tidak dapat menyimpan', 'Perubahan kegemaran tidak dapat disimpan. Cuba lagi.');
+    }
+  };
 
   const Header = (
     <View style={styles.header}>
-      <Text style={type.h1}>Resepi Kegemaran</Text>
       <Text style={type.body}>Resepi pilihan anda yang disimpan dengan ikon hati.</Text>
     </View>
   );
 
   return (
     <View style={styles.root}>
-      <AppBar />
+      <AppBar
+        title="Resepi Kegemaran"
+        showBrand={false}
+        showBack
+        onBack={() => navigation.goBack()}
+      />
       <FlatList
         data={favorites}
         keyExtractor={(recipe) => recipe.id}
@@ -35,7 +46,7 @@ export default function FavoritesScreen({ navigation }) {
           <RecipeCard
             recipe={item}
             onPress={() => navigation.navigate('RecipeDetail', { id: item.id })}
-            onToggleFavorite={() => toggleFavorite(item.id)}
+            onToggleFavorite={() => onToggleFavorite(item.id)}
           />
         )}
         contentContainerStyle={styles.list}

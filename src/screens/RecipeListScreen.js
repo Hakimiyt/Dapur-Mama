@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ScrollView, Pressable, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
@@ -11,13 +11,46 @@ import { useRecipes } from '../context/RecipeContext';
 import { colors, radius, space, type } from '../theme';
 
 export default function RecipeListScreen({ navigation }) {
-  const { recipes, loading, toggleFavorite } = useRecipes();
+  const { recipes, loading, loadError, reloadRecipes, toggleFavorite } = useRecipes();
 
   const goAdd = () => navigation.navigate('RecipeForm');
   const goDetail = (id) => navigation.navigate('RecipeDetail', { id });
+  const onToggleFavorite = async (id) => {
+    try {
+      await toggleFavorite(id);
+    } catch {
+      Alert.alert('Tidak dapat menyimpan', 'Perubahan kegemaran tidak dapat disimpan. Cuba lagi.');
+    }
+  };
+
+  if (loading || loadError) {
+    return (
+      <View style={styles.root}>
+        <AppBar />
+        <View style={styles.status}>
+          {loading ? (
+            <>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={type.body}>Memuatkan koleksi resepi...</Text>
+            </>
+          ) : (
+            <>
+              <Text style={[type.body, { textAlign: 'center' }]}>
+                Koleksi resepi tidak dapat dimuatkan. Periksa ruang simpanan dan cuba lagi.
+              </Text>
+              <Button label="Cuba lagi" onPress={reloadRecipes} />
+            </>
+          )}
+        </View>
+        <SafeAreaView edges={['bottom']} style={styles.footer}>
+          <BottomNav navigation={navigation} active="home" />
+        </SafeAreaView>
+      </View>
+    );
+  }
 
   // ---------- Skrin 02: Koleksi kosong ----------
-  if (!loading && recipes.length === 0) {
+  if (recipes.length === 0) {
     return (
       <View style={styles.root}>
         <AppBar />
@@ -63,7 +96,7 @@ export default function RecipeListScreen({ navigation }) {
       </View>
       {showFeatured && (
         <Pressable style={styles.featured} onPress={() => goDetail(featured.id)}>
-          <Thumbnail uri={featured.photoUri} style={styles.featuredImg} iconSize={48} />
+          <Thumbnail uri={featured.photoUri} recipeId={featured.id} style={styles.featuredImg} iconSize={48} />
           <View style={{ padding: space.lg, gap: space.sm }}>
             <Text style={[type.caption, { color: colors.orange700 }]}>
               {`PILIHAN MAMA  /  ${featured.category.toUpperCase()}`}
@@ -91,7 +124,7 @@ export default function RecipeListScreen({ navigation }) {
         }
         ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
         renderItem={({ item }) => (
-          <RecipeCard recipe={item} onPress={() => goDetail(item.id)} onToggleFavorite={() => toggleFavorite(item.id)} />
+          <RecipeCard recipe={item} onPress={() => goDetail(item.id)} onToggleFavorite={() => onToggleFavorite(item.id)} />
         )}
         contentContainerStyle={{ padding: space.xl, paddingBottom: space.xl, gap: space.xl }}
       />
@@ -114,6 +147,7 @@ const styles = StyleSheet.create({
   footer: { paddingHorizontal: space.xl, paddingTop: space.md, backgroundColor: colors.bgApp },
   bottomArea: { backgroundColor: colors.surface },
   emptyContent: { flexGrow: 1 },
+  status: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: space.xl, gap: space.lg },
   emptyCard: {
     marginTop: space.xl, padding: space.xl, gap: space.lg, alignItems: 'center',
     backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border,

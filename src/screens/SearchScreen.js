@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
 import BottomNav from '../components/BottomNav';
@@ -26,6 +26,13 @@ export default function SearchScreen({ navigation }) {
   );
 
   const goDetail = (id) => navigation.navigate('RecipeDetail', { id });
+  const onToggleFavorite = async (id) => {
+    try {
+      await toggleFavorite(id);
+    } catch {
+      Alert.alert('Tidak dapat menyimpan', 'Perubahan kegemaran tidak dapat disimpan. Cuba lagi.');
+    }
+  };
   const Header = (
     <View style={styles.header}>
       <View style={{ gap: space.sm }}>
@@ -62,7 +69,7 @@ export default function SearchScreen({ navigation }) {
           <RecipeCard
             recipe={item}
             onPress={() => goDetail(item.id)}
-            onToggleFavorite={() => toggleFavorite(item.id)}
+            onToggleFavorite={() => onToggleFavorite(item.id)}
           />
         )}
         contentContainerStyle={styles.list}

@@ -11,7 +11,6 @@ export default function SplashScreen({ navigation }) {
       <View style={styles.content}>
         <BrandMark />
         <View style={styles.titleWrap}>
-          <Text style={styles.title}>Dapur Mama</Text>
           <Text style={[type.body, styles.subtitle]}>
             Simpan rasa, kongsi cerita.
           </Text>
@@ -42,10 +41,6 @@ const styles = StyleSheet.create({
   titleWrap: {
     alignItems: 'center',
     marginTop: space.xl,
-  },
-  title: {
-    ...type.h2,
-    fontSize: 26,
   },
   subtitle: {
     marginTop: space.sm,

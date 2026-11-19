@@ -17,6 +17,8 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import SignUpScreen from './src/screens/SignUpScreen';
+import AboutScreen from './src/screens/AboutScreen';
+import ContactScreen from './src/screens/ContactScreen';
 import { colors } from './src/theme';
 
 const Stack = createNativeStackNavigator();
@@ -50,6 +52,8 @@ export default function App() {
             <Stack.Screen name="Search" component={SearchScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />
             <Stack.Screen name="Favorites" component={FavoritesScreen} />
+            <Stack.Screen name="AboutUs" component={AboutScreen} />
+            <Stack.Screen name="ContactUs" component={ContactScreen} />
           </Stack.Navigator>
         </NavigationContainer>
       </RecipeProvider>

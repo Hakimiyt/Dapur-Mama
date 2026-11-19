@@ -5,7 +5,7 @@ import sampleRecipes from '../data/sampleRecipes';
 // Penyimpanan setempat (local data storage) menggunakan AsyncStorage
 const KEY = '@dapur_mama/recipes_v1';
 const SAMPLE_VERSION_KEY = '@dapur_mama/sample_recipes_version';
-const SAMPLE_VERSION = '3';
+const SAMPLE_VERSION = '4';
 
 export async function loadRecipes() {
   try {
@@ -17,7 +17,7 @@ export async function loadRecipes() {
       return sampleRecipes;
     }
     const data = JSON.parse(raw);
-    if (!Array.isArray(data)) return [];
+    if (!Array.isArray(data)) throw new Error('Data resepi tidak sah.');
 
     const sampleVersion = await AsyncStorage.getItem(SAMPLE_VERSION_KEY);
     if (sampleVersion !== SAMPLE_VERSION) {
@@ -25,7 +25,17 @@ export async function loadRecipes() {
       const existingIds = new Set(data.map((recipe) => recipe.id));
       const migrated = data.map((recipe) => {
         const sample = sampleById.get(recipe.id);
-        return sample ? { ...recipe, category: sample.category, recommended: sample.recommended } : recipe;
+        return sample
+          ? {
+              ...recipe,
+              name: sample.name,
+              category: sample.category,
+              minutes: sample.minutes,
+              ingredients: sample.ingredients,
+              steps: sample.steps,
+              recommended: sample.recommended,
+            }
+          : recipe;
       });
       migrated.push(...sampleRecipes.filter((recipe) => !existingIds.has(recipe.id)));
       await AsyncStorage.setItem(KEY, JSON.stringify(migrated));
@@ -38,7 +48,7 @@ export async function loadRecipes() {
     return data;
   } catch (e) {
     log('loadRecipes GAGAL', e);
-    return [];
+    throw e;
   }
 }
 
@@ -49,6 +59,6 @@ export async function saveRecipes(recipes) {
     return true;
   } catch (e) {
     log('saveRecipes GAGAL', e);
-    return false;
+    throw e;
   }
 }

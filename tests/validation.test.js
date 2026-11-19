@@ -14,8 +14,8 @@ async function main() {
   const { validateSignUp, validateLogin, validateRecipe } = await import(moduleUrl);
 
   const validSignUp = validateSignUp({
-    name: 'Nur Aisyah',
-    email: 'aisyah@example.com',
+    name: 'John Doe',
+    email: 'johndoe@example.com',
     password: '12345678',
   });
   assert(validSignUp.isValid, 'Pendaftaran yang sah ditolak');

@@ -28,22 +28,33 @@ export default function RecipeFormScreen({ navigation, route }) {
     photoUri: existing?.photoUri ?? null,
   });
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [pickingPhoto, setPickingPhoto] = useState(false);
   const set = (k) => (v) => {
     setForm((f) => ({ ...f, [k]: v }));
     if (errors[k]) setErrors((e) => ({ ...e, [k]: undefined }));
   };
 
   const pickPhoto = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      Alert.alert('Kebenaran diperlukan', 'Benarkan akses galeri untuk memilih foto hidangan.');
-      return;
+    setPickingPhoto(true);
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert('Kebenaran diperlukan', 'Benarkan akses galeri untuk memilih foto hidangan.');
+        return;
+      }
+      const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [16, 9] });
+      if (!res.canceled && res.assets?.[0]?.uri) set('photoUri')(res.assets[0].uri);
+    } catch (error) {
+      log('Pilih foto GAGAL', error);
+      Alert.alert('Tidak dapat memilih foto', 'Cuba pilih foto sekali lagi.');
+    } finally {
+      setPickingPhoto(false);
     }
-    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7, allowsEditing: true, aspect: [16, 9] });
-    if (!res.canceled) set('photoUri')(res.assets[0].uri);
   };
 
   const onSave = async () => {
+    if (saving) return;
     const { errors: errs, isValid } = validateRecipe(form);
     setErrors(errs);
     log('validate ->', isValid ? 'SAH' : errs);
@@ -56,12 +67,20 @@ export default function RecipeFormScreen({ navigation, route }) {
       steps: form.steps.trim(),
       photoUri: form.photoUri,
     };
-    if (isEdit) {
-      await updateRecipe(existing.id, payload);
-      navigation.goBack();
-    } else {
-      const r = await addRecipe(payload);
-      navigation.replace('RecipeDetail', { id: r.id });
+    setSaving(true);
+    try {
+      if (isEdit) {
+        await updateRecipe(existing.id, payload);
+        navigation.goBack();
+      } else {
+        const r = await addRecipe(payload);
+        navigation.replace('RecipeDetail', { id: r.id });
+      }
+    } catch (error) {
+      log('Simpan resepi GAGAL', error);
+      Alert.alert('Tidak dapat menyimpan', 'Resepi anda belum disimpan. Cuba lagi.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -88,8 +107,9 @@ export default function RecipeFormScreen({ navigation, route }) {
             {form.photoUri && <Image source={{ uri: form.photoUri }} style={styles.photo} />}
             <Button
               variant="secondary"
-              label={form.photoUri ? 'Tukar foto hidangan' : '+  Tambah foto hidangan'}
+              label={pickingPhoto ? 'Memilih foto...' : form.photoUri ? 'Tukar foto hidangan' : '+  Tambah foto hidangan'}
               onPress={pickPhoto}
+              loading={pickingPhoto}
             />
             <Text style={type.caption}>Pilihan • JPG atau PNG</Text>
           </View>
@@ -145,8 +165,12 @@ export default function RecipeFormScreen({ navigation, route }) {
         </ScrollView>
 
         <SafeAreaView edges={['bottom']} style={styles.footer}>
-          <Button label={isEdit ? 'Simpan Perubahan' : 'Simpan Resepi'} onPress={onSave} testID="btn-save" />
-          <Text style={[type.caption, { textAlign: 'center', marginTop: space.md }]}>Dapur Mama • Resepi anda, kenangan kita</Text>
+          <Button
+            label={saving ? 'Menyimpan...' : isEdit ? 'Simpan Perubahan' : 'Simpan Resepi'}
+            onPress={onSave}
+            loading={saving}
+            testID="btn-save"
+          />
           <BottomNav navigation={navigation} active="add" style={{ marginHorizontal: -space.xl }} />
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -159,5 +183,5 @@ const styles = StyleSheet.create({
   content: { padding: space.xl, gap: space.lg },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   photo: { width: '100%', height: 180, borderRadius: radius.lg, marginBottom: space.xs },
-  footer: { paddingHorizontal: space.xl, paddingTop: space.md, backgroundColor: colors.bgApp },
+  footer: { paddingHorizontal: space.xl, paddingTop: space.md, gap: space.lg, backgroundColor: colors.bgApp },
 });

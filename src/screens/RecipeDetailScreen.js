@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppBar from '../components/AppBar';
 import Button from '../components/Button';
@@ -17,6 +17,7 @@ export default function RecipeDetailScreen({ navigation, route }) {
   const recipe = getRecipe(route.params.id);
   const [checked, setChecked] = useState({});
   const [confirm, setConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   if (!recipe) return null; // selepas dipadam
 
@@ -25,16 +26,23 @@ export default function RecipeDetailScreen({ navigation, route }) {
   const edit = () => navigation.navigate('RecipeForm', { id: recipe.id });
   const askDelete = () => setConfirm(true);
   const doDelete = async () => {
-    setConfirm(false);
-    await deleteRecipe(recipe.id);
-    navigation.popToTop();
+    setDeleting(true);
+    try {
+      await deleteRecipe(recipe.id);
+      setConfirm(false);
+      navigation.popToTop();
+    } catch {
+      Alert.alert('Tidak dapat memadam', 'Resepi anda masih tersimpan. Cuba lagi.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <View style={styles.root}>
       <AppBar title="Butiran Resepi" showBrand={false} showBack onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={styles.content}>
-        <Thumbnail uri={recipe.photoUri} style={styles.photo} iconSize={56} />
+        <Thumbnail uri={recipe.photoUri} recipeId={recipe.id} style={styles.photo} iconSize={56} />
         <View style={{ gap: space.sm }}>
           <Text style={[type.caption, { color: colors.orange700 }]}>{`${recipe.category.toUpperCase()}  /  RESEPI KELUARGA`}</Text>
           <Text style={type.h1}>{recipe.name}</Text>
@@ -77,8 +85,9 @@ export default function RecipeDetailScreen({ navigation, route }) {
         visible={confirm}
         title="Padam resepi?"
         message={`“${recipe.name}” akan dipadam secara kekal. Tindakan ini tidak boleh dibatalkan.`}
-        onCancel={() => setConfirm(false)}
+        onCancel={() => !deleting && setConfirm(false)}
         onConfirm={doDelete}
+        confirming={deleting}
       />
     </View>
   );
