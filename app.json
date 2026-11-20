@@ -2,7 +2,7 @@
   "expo": {
     "name": "DapurMama",
     "slug": "DapurMama",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "icon": "./assets/brand/dapur-mama-logo.png",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
@@ -10,8 +10,16 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.dapurmama.app",
-      "versionCode": 1
-    }
+      "package": "com.amirul.dapurmama.app",
+      "versionCode": 2
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8a20336e-b172-4b9a-8762-37d4296b0167"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }

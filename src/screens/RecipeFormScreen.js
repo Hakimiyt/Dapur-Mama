@@ -7,10 +7,22 @@ import Button from '../components/Button';
 import BottomNav from '../components/BottomNav';
 import Chip from '../components/Chip';
 import InputField from '../components/InputField';
+import NumberedLineField from '../components/NumberedLineField';
 import { useRecipes } from '../context/RecipeContext';
-import { validateRecipe } from '../utils/validation';
+import { toLines, validateRecipe } from '../utils/validation';
 import { log } from '../utils/log';
 import { colors, radius, space, type, CATEGORIES } from '../theme';
+
+const initialLines = (value = '') => {
+  const lines = toLines(value);
+  return [...lines, ...Array(Math.max(0, 3 - lines.length)).fill('')];
+};
+
+const serializeLines = (lines) =>
+  lines
+    .map((line) => line.replace(/\s*\n\s*/g, ' ').trim())
+    .filter(Boolean)
+    .join('\n');
 
 // Skrin 03 (Tambah), 04 (Semakan ralat) dan 06 (Edit) — satu komponen, dua mod.
 export default function RecipeFormScreen({ navigation, route }) {
@@ -23,8 +35,8 @@ export default function RecipeFormScreen({ navigation, route }) {
     name: existing?.name ?? '',
     category: existing?.category ?? '',
     minutes: existing ? String(existing.minutes) : '',
-    ingredients: existing?.ingredients ?? '',
-    steps: existing?.steps ?? '',
+    ingredients: initialLines(existing?.ingredients),
+    steps: initialLines(existing?.steps),
     photoUri: existing?.photoUri ?? null,
   });
   const [errors, setErrors] = useState({});
@@ -55,7 +67,9 @@ export default function RecipeFormScreen({ navigation, route }) {
 
   const onSave = async () => {
     if (saving) return;
-    const { errors: errs, isValid } = validateRecipe(form);
+    const ingredients = serializeLines(form.ingredients);
+    const steps = serializeLines(form.steps);
+    const { errors: errs, isValid } = validateRecipe({ ...form, ingredients, steps });
     setErrors(errs);
     log('validate ->', isValid ? 'SAH' : errs);
     if (!isValid) return;
@@ -63,8 +77,8 @@ export default function RecipeFormScreen({ navigation, route }) {
       name: form.name.trim(),
       category: form.category,
       minutes: Number(form.minutes),
-      ingredients: form.ingredients.trim(),
-      steps: form.steps.trim(),
+      ingredients,
+      steps,
       photoUri: form.photoUri,
     };
     setSaving(true);
@@ -143,25 +157,28 @@ export default function RecipeFormScreen({ navigation, route }) {
             testID="input-minutes"
           />
 
-          <InputField
+          <NumberedLineField
             label="Bahan-bahan *"
-            multiline
-            placeholder={'Contoh: 1 cawan beras\n100 ml santan\n1 helai daun pandan'}
-            value={form.ingredients}
-            onChangeText={set('ingredients')}
+            lines={form.ingredients}
+            onChangeLines={set('ingredients')}
+            addLabel="Tambah bahan"
+            placeholder="Contoh: 1 cawan beras"
             error={errors.ingredients}
             hint="Satu bahan setiap baris"
           />
 
-          <InputField
-            label="Langkah Memasak *"
-            multiline
-            placeholder={'1. Tulis langkah pertama di sini.\n2. Sambung langkah seterusnya.'}
-            value={form.steps}
-            onChangeText={set('steps')}
-            error={errors.steps}
-            hint="Susun langkah mengikut urutan"
-          />
+          <View style={{ marginTop: space.sm }}>
+            <NumberedLineField
+              label="Langkah Memasak *"
+              lines={form.steps}
+              onChangeLines={set('steps')}
+              addLabel="Tambah langkah"
+              placeholder="Tulis langkah memasak"
+              error={errors.steps}
+              hint="Susun langkah mengikut urutan"
+              multiline
+            />
+          </View>
         </ScrollView>
 
         <SafeAreaView edges={['bottom']} style={styles.footer}>
